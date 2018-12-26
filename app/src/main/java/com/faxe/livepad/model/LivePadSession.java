@@ -7,6 +7,7 @@ public class LivePadSession {
     private UUID uuid;
     private String encryptionKey;
     private User user;
+    private boolean accepted = false;
 
     public LivePadSession(UUID uuid, String encryptionKey, User user) {
         this.uuid = uuid;
@@ -34,5 +35,15 @@ public class LivePadSession {
         return this.getJoinTopic() + "/accepted";
     }
 
+    public String getStartTopic(){
+        return this.uuid + "/start";
+    }
 
+    public void setAccepted(boolean accepted) {
+        this.accepted = accepted;
+    }
+
+    public boolean isAccepted() {
+        return accepted;
+    }
 }

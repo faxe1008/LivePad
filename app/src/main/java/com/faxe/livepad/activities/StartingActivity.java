@@ -1,5 +1,6 @@
 package com.faxe.livepad.activities;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.faxe.livepad.R;
 import com.faxe.livepad.model.LivePadSession;
@@ -17,9 +19,7 @@ import com.faxe.livepad.service.MqttServiceConnection;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -32,6 +32,7 @@ public class StartingActivity extends AppCompatActivity {
     private EditText txtJoinAs;
     private LivePadSession livePadSession;
     private MqttServiceConnection mqttServiceConnection;
+    private ProgressDialog waitingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,9 @@ public class StartingActivity extends AppCompatActivity {
                scanJoinCode();
             }
         });
+        this.waitingDialog = new ProgressDialog(this);
+        this.waitingDialog.setMessage("Waiting for master to start ... ");
+
     }
 
     @Override
@@ -55,6 +59,8 @@ public class StartingActivity extends AppCompatActivity {
         startService(intent);
         this.mqttServiceConnection = new MqttServiceConnection();
         bindService(intent, this.mqttServiceConnection, Context.BIND_AUTO_CREATE);
+
+
     }
 
 
@@ -69,7 +75,7 @@ public class StartingActivity extends AppCompatActivity {
         integrator.initiateScan();
     }
 
-    private void onJoinSuccess(){
+    private void onStartDrawing(){
         startActivity(new Intent(this, DrawingActivity.class));
     }
 
@@ -82,30 +88,31 @@ public class StartingActivity extends AppCompatActivity {
                 this.txtJoinAs.setError("Please enter a user name");
             }else{
 
-                String[] livePadCode = result.getContents().split("\\|");
+                final String[] livePadCode = result.getContents().split("\\|");
                 this.livePadSession = new LivePadSession(UUID.fromString(livePadCode[0]), livePadCode[1], new User(this.txtJoinAs.getText().toString()));
 
                 try {
                     this.mqttServiceConnection.getMqttConnectionManagerService().setCallback(new MqttCallback() {
                         @Override
-                        public void connectionLost(Throwable cause) {
-
-                        }
+                        public void connectionLost(Throwable cause) {}
 
                         @Override
                         public void messageArrived(String topic, MqttMessage message) throws Exception {
                             if(topic.equals(livePadSession.getJoinAcceptedTopic())){
-                                onJoinSuccess();
+                                livePadSession.setAccepted(true);
+                                waitingDialog.show();
+                            }else if (topic.equals(livePadSession.getStartTopic()) && livePadSession.isAccepted()){
+                                waitingDialog.dismiss();
+                                onStartDrawing();
                             }
                         }
 
                         @Override
-                        public void deliveryComplete(IMqttDeliveryToken token) {
-
-                        }
+                        public void deliveryComplete(IMqttDeliveryToken token) {}
                     });
 
                     this.mqttServiceConnection.getMqttConnectionManagerService().subscribe(this.livePadSession.getJoinAcceptedTopic());
+                    this.mqttServiceConnection.getMqttConnectionManagerService().subscribe(this.livePadSession.getStartTopic());
                     this.mqttServiceConnection.getMqttConnectionManagerService().publish(this.livePadSession.getJoinTopic(), "");
                 } catch (MqttException | MqttClientNotConnectedException e) {
                     e.printStackTrace();
