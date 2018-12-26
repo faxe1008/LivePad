@@ -30,5 +30,9 @@ public class LivePadSession {
         return this.uuid + "/join/"+this.getUser().getName();
     }
 
+    public String getJoinAcceptedTopic(){
+        return this.getJoinTopic() + "/accepted";
+    }
+
 
 }

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".StartingActivity">
+    tools:context=".activities.StartingActivity">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -12,10 +12,33 @@
         android:gravity="center"
         android:orientation="vertical">
 
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
 
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView2"
+                android:background="@drawable/ic_launcher_foreground" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="Welcome to LivePad!"
+                android:id="@+id/textView2"
+                android:gravity="right" />
+        </LinearLayout>
 
 
         <TextView
+            android:textSize="18dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Join with name:"
@@ -24,22 +47,21 @@
         <EditText
             android:layout_width="200dp"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:id="@+id/txtJoinAs"/>
 
 
 
         <Button
             android:id="@+id/btnScan"
+            android:layout_marginTop="50dp"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:text="Scan Join Code"
+            android:text="Scan LivePad Code"
             android:textAllCaps="false"
-            android:textSize="16sp" />
+            android:textSize="18dp" />
 
-        <TextView
-            android:id="@+id/tv_qr_readTxt"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+
 
 
 
