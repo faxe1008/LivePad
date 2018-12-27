@@ -3,12 +3,15 @@ package com.faxe.livepad.activities;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.faxe.livepad.R;
 import com.faxe.livepad.model.LivePadSession;
 import com.faxe.livepad.model.User;
@@ -69,7 +72,7 @@ public class StartingActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         this.livePadSession = (LivePadSession) savedInstanceState.getSerializable("livePadSession");
-        if(this.livePadSession.isAccepted()){
+        if(this.livePadSession!=null && this.livePadSession.isAccepted()){
             waitingDialog.show();
         }
     }
@@ -113,6 +116,8 @@ public class StartingActivity extends AppCompatActivity {
                         public void messageArrived(String topic, MqttMessage message) throws Exception {
                             if(topic.equals(livePadSession.getJoinAcceptedTopic())){
                                 livePadSession.setAccepted(true);
+                                ObjectMapper mapper = new ObjectMapper();
+                                livePadSession.getUser().setColor(mapper.readTree(message.toString()).get("color").asText());
                                 waitingDialog.show();
                             }else if (topic.equals(livePadSession.getStartTopic()) && livePadSession.isAccepted()){
                                 waitingDialog.dismiss();
@@ -136,5 +141,6 @@ public class StartingActivity extends AppCompatActivity {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
 
 }

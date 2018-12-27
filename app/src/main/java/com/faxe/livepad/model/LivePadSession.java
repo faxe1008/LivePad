@@ -1,5 +1,9 @@
 package com.faxe.livepad.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -42,6 +46,8 @@ public class LivePadSession implements Serializable {
         return this.uuid + "/start";
     }
 
+    public String getDrawingTopic(){ return this.uuid + "/draw/" + this.getUser().getName();}
+
     public void setAccepted(boolean accepted) {
         this.accepted = accepted;
     }
@@ -49,4 +55,6 @@ public class LivePadSession implements Serializable {
     public boolean isAccepted() {
         return accepted;
     }
+
+
 }
