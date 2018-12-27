@@ -28,12 +28,11 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.UUID;
 
-public class StartingActivity extends AppCompatActivity {
+public class StartingActivity extends BasicServiceActivity {
 
     private Button btnScan;
     private EditText txtJoinAs;
-    private LivePadSession livePadSession;
-    private MqttServiceConnection mqttServiceConnection;
+    private LivePadSession livePadSession = new LivePadSession();
     private ProgressDialog waitingDialog;
 
     @Override
@@ -53,14 +52,6 @@ public class StartingActivity extends AppCompatActivity {
         waitingDialog.setMessage("Waiting for master to start...");
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Intent intent = new Intent(this, MqttConnectionManagerService.class);
-        startService(intent);
-        this.mqttServiceConnection = new MqttServiceConnection();
-        bindService(intent, this.mqttServiceConnection, Context.BIND_AUTO_CREATE);
-    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -89,7 +80,6 @@ public class StartingActivity extends AppCompatActivity {
     }
 
     private void onStartDrawing(){
-        this.unbindService(this.mqttServiceConnection);
         Intent drawingActivity = new Intent(this, DrawingActivity.class);
         drawingActivity.putExtra("livePadSession", this.livePadSession);
         startActivity(drawingActivity);
@@ -104,31 +94,12 @@ public class StartingActivity extends AppCompatActivity {
                 this.txtJoinAs.setError("Please enter a user name");
             }else{
 
+
+
                 final String[] livePadCode = result.getContents().split("\\|");
                 this.livePadSession = new LivePadSession(UUID.fromString(livePadCode[0]), livePadCode[1], new User(this.txtJoinAs.getText().toString()));
 
                 try {
-                    this.mqttServiceConnection.getService().setCallback(new MqttCallback() {
-                        @Override
-                        public void connectionLost(Throwable cause) {}
-
-                        @Override
-                        public void messageArrived(String topic, MqttMessage message) throws Exception {
-                            if(topic.equals(livePadSession.getJoinAcceptedTopic())){
-                                livePadSession.setAccepted(true);
-                                ObjectMapper mapper = new ObjectMapper();
-                                livePadSession.getUser().setColor(mapper.readTree(message.toString()).get("color").asText());
-                                waitingDialog.show();
-                            }else if (topic.equals(livePadSession.getStartTopic()) && livePadSession.isAccepted()){
-                                waitingDialog.dismiss();
-                                onStartDrawing();
-                            }
-                        }
-
-                        @Override
-                        public void deliveryComplete(IMqttDeliveryToken token) {}
-                    });
-
                     this.mqttServiceConnection.getService().subscribe(this.livePadSession.getJoinAcceptedTopic());
                     this.mqttServiceConnection.getService().subscribe(this.livePadSession.getStartTopic());
                     this.mqttServiceConnection.getService().publish(this.livePadSession.getJoinTopic(), "");
@@ -143,4 +114,35 @@ public class StartingActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onAttach(MqttConnectionManagerService service) {
+
+
+        service.setCallback(new MqttCallback() {
+            @Override
+            public void connectionLost(Throwable cause) {}
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+                if(topic.equals(livePadSession.getJoinAcceptedTopic())){
+                    livePadSession.setAccepted(true);
+                    ObjectMapper mapper = new ObjectMapper();
+                    livePadSession.getUser().setColor(mapper.readTree(message.toString()).get("color").asText());
+                    waitingDialog.show();
+                }else if (topic.equals(livePadSession.getStartTopic()) && livePadSession.isAccepted()){
+                    waitingDialog.dismiss();
+                    onStartDrawing();
+                }
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {}
+        });
+
+    }
+
+    @Override
+    public void onDetach() {
+
+    }
 }

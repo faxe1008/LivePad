@@ -46,7 +46,11 @@ public class LivePadSession implements Serializable {
         return this.uuid + "/start";
     }
 
-    public String getDrawingTopic(){ return this.uuid + "/draw/" + this.getUser().getName();}
+    public String getUserDrawingTopic(){ return this.uuid + "/draw/" + this.getUser().getName();}
+
+    public String getDrawingTopic(){
+        return this.uuid + "/draw/#";
+    }
 
     public void setAccepted(boolean accepted) {
         this.accepted = accepted;
