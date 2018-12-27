@@ -56,18 +56,6 @@ public class MqttConnectionManagerService extends Service {
         try {
             if (!client.isConnected()) {
                 IMqttToken token = client.connect(options);
-                token.setActionCallback(new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.e("SUCCESS", "test");
-                    }
-
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        Log.e("ERROR", "test");
-
-                    }
-                });
             }
         } catch (MqttException e) {
             Log.e("MQTTConnectionManager", "Connection error occured", e);

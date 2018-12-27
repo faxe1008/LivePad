@@ -63,7 +63,7 @@ public class DrawingActivity extends BasicServiceActivity implements CanvasWhite
     public void onAttach(MqttConnectionManagerService service) {
 
         try {
-            service.subscribe(this.livePadSession + "/draw/#");
+            service.subscribe(this.livePadSession.getDrawingTopic());
         } catch (MqttException | MqttClientNotConnectedException e) {
             e.printStackTrace();
         }
@@ -74,12 +74,12 @@ public class DrawingActivity extends BasicServiceActivity implements CanvasWhite
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                if(topic.equals(livePadSession.getDrawingTopic()) && !topic.equals(livePadSession.getUserDrawingTopic())){
+                /*if(topic.equals(livePadSession.getDrawingTopic()) && !topic.equals(livePadSession.getUserDrawingTopic())){
                     ObjectMapper mapper = new ObjectMapper();
 
                     List<CanvasWhiteboardUpdate> updates = mapper.readValue(message.toString(),  new TypeReference<ArrayList<CanvasWhiteboardUpdate>>() {});
                     canvasWhiteboard.applyUpdates(updates);
-                }
+                }*/
             }
 
             @Override
