@@ -8,7 +8,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.faxe.livepad.R;
 import com.faxe.livepad.model.LivePadSession;
@@ -48,8 +47,7 @@ public class StartingActivity extends AppCompatActivity {
             }
         });
         this.waitingDialog = new ProgressDialog(this);
-        this.waitingDialog.setMessage("Waiting for master to start ... ");
-
+        waitingDialog.setMessage("Waiting for master to start...");
     }
 
     @Override
@@ -59,14 +57,26 @@ public class StartingActivity extends AppCompatActivity {
         startService(intent);
         this.mqttServiceConnection = new MqttServiceConnection();
         bindService(intent, this.mqttServiceConnection, Context.BIND_AUTO_CREATE);
-
-
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("livePadSession", this.livePadSession);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        this.livePadSession = (LivePadSession) savedInstanceState.getSerializable("livePadSession");
+        if(this.livePadSession.isAccepted()){
+            waitingDialog.show();
+        }
+    }
 
     private void scanJoinCode(){
         IntentIntegrator integrator = new IntentIntegrator(StartingActivity.this);
-        integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES);
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
         integrator.setPrompt("Scanning LivePad Code");
         integrator.setOrientationLocked(false);
         integrator.setCameraId(0);
@@ -76,7 +86,10 @@ public class StartingActivity extends AppCompatActivity {
     }
 
     private void onStartDrawing(){
-        startActivity(new Intent(this, DrawingActivity.class));
+        this.unbindService(this.mqttServiceConnection);
+        Intent drawingActivity = new Intent(this, DrawingActivity.class);
+        drawingActivity.putExtra("livePadSession", this.livePadSession);
+        startActivity(drawingActivity);
     }
 
     @Override
@@ -92,7 +105,7 @@ public class StartingActivity extends AppCompatActivity {
                 this.livePadSession = new LivePadSession(UUID.fromString(livePadCode[0]), livePadCode[1], new User(this.txtJoinAs.getText().toString()));
 
                 try {
-                    this.mqttServiceConnection.getMqttConnectionManagerService().setCallback(new MqttCallback() {
+                    this.mqttServiceConnection.getService().setCallback(new MqttCallback() {
                         @Override
                         public void connectionLost(Throwable cause) {}
 
@@ -111,9 +124,9 @@ public class StartingActivity extends AppCompatActivity {
                         public void deliveryComplete(IMqttDeliveryToken token) {}
                     });
 
-                    this.mqttServiceConnection.getMqttConnectionManagerService().subscribe(this.livePadSession.getJoinAcceptedTopic());
-                    this.mqttServiceConnection.getMqttConnectionManagerService().subscribe(this.livePadSession.getStartTopic());
-                    this.mqttServiceConnection.getMqttConnectionManagerService().publish(this.livePadSession.getJoinTopic(), "");
+                    this.mqttServiceConnection.getService().subscribe(this.livePadSession.getJoinAcceptedTopic());
+                    this.mqttServiceConnection.getService().subscribe(this.livePadSession.getStartTopic());
+                    this.mqttServiceConnection.getService().publish(this.livePadSession.getJoinTopic(), "");
                 } catch (MqttException | MqttClientNotConnectedException e) {
                     e.printStackTrace();
                 }

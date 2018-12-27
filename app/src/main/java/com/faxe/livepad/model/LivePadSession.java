@@ -1,13 +1,16 @@
 package com.faxe.livepad.model;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-public class LivePadSession {
+public class LivePadSession implements Serializable {
 
     private UUID uuid;
     private String encryptionKey;
     private User user;
     private boolean accepted = false;
+
+    public LivePadSession(){}
 
     public LivePadSession(UUID uuid, String encryptionKey, User user) {
         this.uuid = uuid;

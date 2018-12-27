@@ -18,7 +18,7 @@ public class MqttServiceConnection implements ServiceConnection {
         this.mqttConnectionManagerService = null;
     }
 
-    public MqttConnectionManagerService getMqttConnectionManagerService() {
+    public MqttConnectionManagerService getService() {
         return mqttConnectionManagerService;
     }
 }
