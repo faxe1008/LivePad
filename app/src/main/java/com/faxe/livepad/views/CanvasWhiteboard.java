@@ -72,6 +72,12 @@ public class CanvasWhiteboard extends View {
 
     public void drawSingleShape(Canvas canvas, List<CanvasWhiteboardUpdate> shapeData){
         Path shapePath = new Path();
+        Paint shapePaint = new Paint();
+        shapePaint.setAntiAlias(true);
+        shapePaint.setStyle(Paint.Style.STROKE);
+        shapePaint.setStrokeJoin(Paint.Join.ROUND);
+        shapePaint.setStrokeCap(Paint.Cap.ROUND);
+
         for (CanvasWhiteboardUpdate drawingUpdate : shapeData){
 
             float xPos = drawingUpdate.getX() * getWidth();
@@ -79,12 +85,15 @@ public class CanvasWhiteboard extends View {
 
             if(drawingUpdate.getType() == CanvasWhiteboardUpdateType.START){
                 shapePath.moveTo(xPos, yPos);
+                shapePaint.setColor(parseColorString(drawingUpdate.getSelectedShapeOptions().getStrokeStyle()));
+                shapePaint.setStrokeWidth(drawingUpdate.getSelectedShapeOptions().getLineWidth());
             }else if(drawingUpdate.getType() == CanvasWhiteboardUpdateType.DRAG){
                 shapePath.lineTo(xPos, yPos);
             }
 
         }
-        canvas.drawPath(shapePath, drawPaint);
+
+        canvas.drawPath(shapePath, shapePaint);
     }
 
     public void processUpdates(List<CanvasWhiteboardUpdate> updates){
@@ -107,7 +116,7 @@ public class CanvasWhiteboard extends View {
             case MotionEvent.ACTION_DOWN:
                 currentShapeID = UUID.randomUUID();
                 path.moveTo(pointX, pointY);
-                CanvasWhiteboardShapeOptions option = new CanvasWhiteboardShapeOptions(true, this.colorRGB, this.colorRGB, 2, "round", "round");
+                CanvasWhiteboardShapeOptions option = new CanvasWhiteboardShapeOptions(true, this.colorRGB, this.colorRGB, drawPaint.getStrokeWidth(), "round", "round");
                 CanvasWhiteboardUpdate downUpdate = new CanvasWhiteboardUpdate(pointX/this.getWidth(), pointY/getHeight(), CanvasWhiteboardUpdateType.START , currentShapeID, "FreeHandShape", option);
                 this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{downUpdate});
 
