@@ -11,7 +11,7 @@ public class CanvasWhiteboardUpdate {
 
     private String selectedShape;
     private CanvasWhiteboardShapeOptions selectedShapeOptions;
-
+    public CanvasWhiteboardUpdate(){}
     public CanvasWhiteboardUpdate(float x, float y, CanvasWhiteboardUpdateType type, UUID uuid) {
         this.x = x;
         this.y = y;

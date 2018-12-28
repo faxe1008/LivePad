@@ -8,6 +8,7 @@ import android.os.Bundle;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.faxe.livepad.R;
@@ -74,12 +75,12 @@ public class DrawingActivity extends BasicServiceActivity implements CanvasWhite
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                /*if(topic.equals(livePadSession.getDrawingTopic()) && !topic.equals(livePadSession.getUserDrawingTopic())){
+                if(livePadSession.isListenableDrawingTopic(topic)){
                     ObjectMapper mapper = new ObjectMapper();
-
-                    List<CanvasWhiteboardUpdate> updates = mapper.readValue(message.toString(),  new TypeReference<ArrayList<CanvasWhiteboardUpdate>>() {});
-                    canvasWhiteboard.applyUpdates(updates);
-                }*/
+                    List<CanvasWhiteboardUpdate> updates = new ArrayList<>();
+                    updates = mapper.readValue(message.toString(),  new TypeReference<ArrayList<CanvasWhiteboardUpdate>>() {});
+                    canvasWhiteboard.processUpdates(updates);
+                }
             }
 
             @Override

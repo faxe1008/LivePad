@@ -43,6 +43,14 @@ public class LivePadSession implements Serializable {
 
     public String getUserDrawingTopic(){ return this.uuid + "/draw/" + this.getUser().getName();}
 
+    public boolean isListenableDrawingTopic(String topic){
+        String[] topicSegment = topic.split("\\/");
+        if(topicSegment[0].equals(this.uuid.toString()) && topicSegment[1].equals("draw") && !topicSegment[2].equals(this.user.getName())){
+            return true;
+        }
+        return false;
+    }
+
     public String getDrawingTopic(){
         return this.uuid + "/draw/#";
     }

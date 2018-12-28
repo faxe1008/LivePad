@@ -11,6 +11,7 @@ import android.view.View;
 
 import com.faxe.livepad.model.canvas.*;
 
+import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,8 +24,8 @@ public class CanvasWhiteboard extends View {
     private String colorRGB = "rgb(0,0,0)";
     private Paint drawPaint;
     private Path path = new Path();
-    private ArrayList<CanvasWhiteboardUpdate> updates = new ArrayList<>();
     private CanvasWhiteBoardUpdateListener updateListener;
+    private Map<UUID, List<CanvasWhiteboardUpdate>> updates;
     private UUID currentShapeID;
 
     public CanvasWhiteboard(Context context, AttributeSet attrs) {
@@ -32,6 +33,7 @@ public class CanvasWhiteboard extends View {
         setFocusable(true);
         setFocusableInTouchMode(true);
         setupPaint();
+        this.updates = new HashMap<>();
     }
 
     public void setUpdateListener(CanvasWhiteBoardUpdateListener listener){
@@ -57,21 +59,42 @@ public class CanvasWhiteboard extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        //draw own stuff
         canvas.drawPath(path, drawPaint);
+        applyUpdates(canvas);
     }
 
-    public void applyUpdates(List<CanvasWhiteboardUpdate> updates){
-        this.updates.addAll(updates);
-        Map<UUID, List<CanvasWhiteboardUpdate>> updateByUuid = new HashMap<>();
-        for(CanvasWhiteboardUpdate update: updates){
+    public void applyUpdates(Canvas canvas){
+        for (UUID shapeId : this.updates.keySet()){
+            drawSingleShape(canvas, this.updates.get(shapeId));
+        }
+    }
 
-            if(!updateByUuid.containsKey(update.getUuid())){
-                updateByUuid.put(update.getUuid(), new ArrayList<CanvasWhiteboardUpdate>());
+    public void drawSingleShape(Canvas canvas, List<CanvasWhiteboardUpdate> shapeData){
+        Path shapePath = new Path();
+        for (CanvasWhiteboardUpdate drawingUpdate : shapeData){
+
+            float xPos = drawingUpdate.getX() * getWidth();
+            float yPos = drawingUpdate.getY() * getHeight();
+
+            if(drawingUpdate.getType() == CanvasWhiteboardUpdateType.START){
+                shapePath.moveTo(xPos, yPos);
+            }else if(drawingUpdate.getType() == CanvasWhiteboardUpdateType.DRAG){
+                shapePath.lineTo(xPos, yPos);
             }
-            updateByUuid.get(update.getUuid()).add(update);
 
         }
-        updateByUuid.get(UUID.randomUUID());
+        canvas.drawPath(shapePath, drawPaint);
+    }
+
+    public void processUpdates(List<CanvasWhiteboardUpdate> updates){
+        for(CanvasWhiteboardUpdate update: updates){
+            if(!this.updates.containsKey(update.getUuid())){
+                this.updates.put(update.getUuid(), new ArrayList<CanvasWhiteboardUpdate>());
+            }
+            this.updates.get(update.getUuid()).add(update);
+        }
+        postInvalidate();
     }
 
     @Override
@@ -86,14 +109,12 @@ public class CanvasWhiteboard extends View {
                 path.moveTo(pointX, pointY);
                 CanvasWhiteboardShapeOptions option = new CanvasWhiteboardShapeOptions(true, this.colorRGB, this.colorRGB, 2, "round", "round");
                 CanvasWhiteboardUpdate downUpdate = new CanvasWhiteboardUpdate(pointX/this.getWidth(), pointY/getHeight(), CanvasWhiteboardUpdateType.START , currentShapeID, "FreeHandShape", option);
-                this.updates.add(downUpdate);
                 this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{downUpdate});
 
                 return true;
             case MotionEvent.ACTION_MOVE:
                 path.lineTo(pointX, pointY);
                 CanvasWhiteboardUpdate moveUpdate = new CanvasWhiteboardUpdate(pointX/this.getWidth(), pointY/getHeight(), CanvasWhiteboardUpdateType.DRAG , currentShapeID);
-                this.updates.add(moveUpdate);
                 this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{moveUpdate});
 
 
@@ -101,14 +122,12 @@ public class CanvasWhiteboard extends View {
 
              case MotionEvent.ACTION_UP:
                  CanvasWhiteboardUpdate upUpdate = new CanvasWhiteboardUpdate(pointX/this.getWidth(), pointY/getHeight(), CanvasWhiteboardUpdateType.STOP , currentShapeID);
-                 this.updates.add(upUpdate);
                  this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{upUpdate});
 
                  break;
             default:
                 return false;
         }
-        // Force a view to draw again
         postInvalidate();
         return true;
     }

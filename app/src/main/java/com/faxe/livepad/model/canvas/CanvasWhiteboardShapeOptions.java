@@ -8,7 +8,7 @@ public class CanvasWhiteboardShapeOptions {
     private float lineWidth;
     private String lineJoin;
     private String lineCap;
-
+    public CanvasWhiteboardShapeOptions(){}
     public CanvasWhiteboardShapeOptions(boolean shouldFillShape, String fillStyle, String strokeStyle, float lineWidth, String lineJoin, String lineCap) {
         this.shouldFillShape = shouldFillShape;
         this.fillStyle = fillStyle;
