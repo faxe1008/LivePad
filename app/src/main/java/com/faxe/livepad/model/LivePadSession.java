@@ -12,7 +12,6 @@ public class LivePadSession implements Serializable {
     private UUID uuid;
     private String encryptionKey;
     private User user;
-    private boolean accepted = false;
 
     public LivePadSession(){}
 
@@ -20,10 +19,6 @@ public class LivePadSession implements Serializable {
         this.uuid = uuid;
         this.encryptionKey = encryptionKey;
         this.user = user;
-    }
-
-    public UUID getUuid() {
-        return uuid;
     }
 
     public String getEncryptionKey() {
@@ -51,14 +46,5 @@ public class LivePadSession implements Serializable {
     public String getDrawingTopic(){
         return this.uuid + "/draw/#";
     }
-
-    public void setAccepted(boolean accepted) {
-        this.accepted = accepted;
-    }
-
-    public boolean isAccepted() {
-        return accepted;
-    }
-
 
 }

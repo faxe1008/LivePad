@@ -34,6 +34,7 @@ public class StartingActivity extends BasicServiceActivity {
     private EditText txtJoinAs;
     private LivePadSession livePadSession = new LivePadSession();
     private ProgressDialog waitingDialog;
+    private boolean isWaiting;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,13 +58,15 @@ public class StartingActivity extends BasicServiceActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putSerializable("livePadSession", this.livePadSession);
+        outState.putSerializable("isWaiting", this.isWaiting);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         this.livePadSession = (LivePadSession) savedInstanceState.getSerializable("livePadSession");
-        if(this.livePadSession!=null && this.livePadSession.isAccepted()){
+        this.isWaiting = savedInstanceState.getBoolean("isWaiting");
+        if(this.isWaiting){
             waitingDialog.show();
         }
     }
@@ -125,12 +128,13 @@ public class StartingActivity extends BasicServiceActivity {
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 if(topic.equals(livePadSession.getJoinAcceptedTopic())){
-                    livePadSession.setAccepted(true);
+                    isWaiting = true;
                     ObjectMapper mapper = new ObjectMapper();
                     livePadSession.getUser().setColor(mapper.readTree(message.toString()).get("color").asText());
                     waitingDialog.show();
-                }else if (topic.equals(livePadSession.getStartTopic()) && livePadSession.isAccepted()){
+                }else if (topic.equals(livePadSession.getStartTopic()) && isWaiting){
                     waitingDialog.dismiss();
+                    isWaiting = false;
                     onStartDrawing();
                 }
             }
