@@ -1,22 +1,16 @@
 package com.faxe.livepad.activities;
 
-import android.content.Context;
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.faxe.livepad.R;
 import com.faxe.livepad.model.LivePadSession;
 import com.faxe.livepad.model.canvas.CanvasWhiteboardUpdate;
 import com.faxe.livepad.service.MqttClientNotConnectedException;
 import com.faxe.livepad.service.MqttConnectionManagerService;
-import com.faxe.livepad.service.MqttServiceConnection;
 import com.faxe.livepad.views.CanvasWhiteBoardUpdateListener;
 import com.faxe.livepad.views.CanvasWhiteboard;
 
@@ -65,13 +59,16 @@ public class DrawingActivity extends BasicServiceActivity implements CanvasWhite
 
         try {
             service.subscribe(this.livePadSession.getDrawingTopic());
+            service.subscribe(this.livePadSession.getHistoryReceivalTopic());
         } catch (MqttException | MqttClientNotConnectedException e) {
             e.printStackTrace();
         }
 
         service.setCallback(new MqttCallback() {
             @Override
-            public void connectionLost(Throwable cause) { }
+            public void connectionLost(Throwable cause) {
+                
+            }
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
@@ -86,6 +83,7 @@ public class DrawingActivity extends BasicServiceActivity implements CanvasWhite
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) { }
         });
+
     }
 
     @Override

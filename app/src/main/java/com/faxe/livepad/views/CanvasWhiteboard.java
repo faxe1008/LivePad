@@ -11,7 +11,6 @@ import android.view.View;
 
 import com.faxe.livepad.model.canvas.*;
 
-import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +26,7 @@ public class CanvasWhiteboard extends View {
     private CanvasWhiteBoardUpdateListener updateListener;
     private Map<UUID, List<CanvasWhiteboardUpdate>> updates;
     private UUID currentShapeID;
+    private CanvasWhiteboardUpdate currentShapeStart;
 
     public CanvasWhiteboard(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -47,7 +47,6 @@ public class CanvasWhiteboard extends View {
     }
 
     private void setupPaint() {
-        // Setup paint with color and stroke styles
         drawPaint = new Paint();
         drawPaint.setColor(paintColor);
         drawPaint.setAntiAlias(true);
@@ -59,18 +58,17 @@ public class CanvasWhiteboard extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        //draw own stuff
         canvas.drawPath(path, drawPaint);
-        applyUpdates(canvas);
+        applyForeignUpdates(canvas);
     }
 
-    public void applyUpdates(Canvas canvas){
+    private void applyForeignUpdates(Canvas canvas){
         for (UUID shapeId : this.updates.keySet()){
             drawSingleShape(canvas, this.updates.get(shapeId));
         }
     }
 
-    public void drawSingleShape(Canvas canvas, List<CanvasWhiteboardUpdate> shapeData){
+    private void drawSingleShape(Canvas canvas, List<CanvasWhiteboardUpdate> shapeData){
         Path shapePath = new Path();
         Paint shapePaint = new Paint();
         shapePaint.setAntiAlias(true);
@@ -117,23 +115,25 @@ public class CanvasWhiteboard extends View {
                 currentShapeID = UUID.randomUUID();
                 path.moveTo(pointX, pointY);
                 CanvasWhiteboardShapeOptions option = new CanvasWhiteboardShapeOptions(true, this.colorRGB, this.colorRGB, drawPaint.getStrokeWidth(), "round", "round");
-                CanvasWhiteboardUpdate downUpdate = new CanvasWhiteboardUpdate(pointX/this.getWidth(), pointY/getHeight(), CanvasWhiteboardUpdateType.START , currentShapeID, "FreeHandShape", option);
-                this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{downUpdate});
-
+                this.currentShapeStart = new CanvasWhiteboardUpdate(pointX/this.getWidth(), pointY/getHeight(), CanvasWhiteboardUpdateType.START , currentShapeID, "FreeHandShape", option);
                 return true;
+
             case MotionEvent.ACTION_MOVE:
                 path.lineTo(pointX, pointY);
                 CanvasWhiteboardUpdate moveUpdate = new CanvasWhiteboardUpdate(pointX/this.getWidth(), pointY/getHeight(), CanvasWhiteboardUpdateType.DRAG , currentShapeID);
-                this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{moveUpdate});
-
-
+                if(this.currentShapeStart!=null){
+                    this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{this.currentShapeStart, moveUpdate});
+                    this.currentShapeStart  = null;
+                }else{
+                    this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{moveUpdate});
+                }
                 break;
 
              case MotionEvent.ACTION_UP:
                  CanvasWhiteboardUpdate upUpdate = new CanvasWhiteboardUpdate(pointX/this.getWidth(), pointY/getHeight(), CanvasWhiteboardUpdateType.STOP , currentShapeID);
                  this.updateListener.onUpdate(new CanvasWhiteboardUpdate[]{upUpdate});
-
                  break;
+
             default:
                 return false;
         }

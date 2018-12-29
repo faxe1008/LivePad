@@ -29,6 +29,10 @@ public class LivePadSession implements Serializable {
         return user;
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public String getJoinTopic(){
         return this.uuid + "/join/"+this.getUser().getName();
     }
@@ -53,6 +57,11 @@ public class LivePadSession implements Serializable {
 
     public String getDrawingTopic(){
         return this.uuid + "/draw/#";
+    }
+
+
+    public String getHistoryReceivalTopic(){
+        return this.uuid + "/history/" + this.user.getName() + "/get/accepted";
     }
 
 }

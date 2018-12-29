@@ -55,7 +55,17 @@ public class MqttConnectionManagerService extends Service {
     public void connect(final MqttAndroidClient client, MqttConnectOptions options) {
         try {
             if (!client.isConnected()) {
-                IMqttToken token = client.connect(options);
+                IMqttToken token = client.connect(options, null, new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        Log.e("CONNECT!!!!!!!!!!!!!!1", "");
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        Log.e("DISCONNECT!!!!!!!!!!!1", "");
+                    }
+                });
             }
         } catch (MqttException e) {
             Log.e("MQTTConnectionManager", "Connection error occured", e);
