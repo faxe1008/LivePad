@@ -59,6 +59,9 @@ public class LivePadSession implements Serializable {
         return this.uuid + "/draw/#";
     }
 
+    public String getHistoryRequestTopic(){
+        return this.uuid + "/history/"+this.user.getName() + "/get";
+    }
 
     public String getHistoryReceivalTopic(){
         return this.uuid + "/history/" + this.user.getName() + "/get/accepted";

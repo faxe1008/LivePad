@@ -57,13 +57,6 @@ public class DrawingActivity extends BasicServiceActivity implements CanvasWhite
     @Override
     public void onAttach(MqttConnectionManagerService service) {
 
-        try {
-            service.subscribe(this.livePadSession.getDrawingTopic());
-            service.subscribe(this.livePadSession.getHistoryReceivalTopic());
-        } catch (MqttException | MqttClientNotConnectedException e) {
-            e.printStackTrace();
-        }
-
         service.setCallback(new MqttCallback() {
             @Override
             public void connectionLost(Throwable cause) {
@@ -72,7 +65,7 @@ public class DrawingActivity extends BasicServiceActivity implements CanvasWhite
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                if(livePadSession.isListenableDrawingTopic(topic)){
+                if(livePadSession.isListenableDrawingTopic(topic) || topic.equals(livePadSession.getHistoryReceivalTopic())){
                     ObjectMapper mapper = new ObjectMapper();
                     List<CanvasWhiteboardUpdate> updates = new ArrayList<>();
                     updates = mapper.readValue(message.toString(),  new TypeReference<ArrayList<CanvasWhiteboardUpdate>>() {});
@@ -83,6 +76,14 @@ public class DrawingActivity extends BasicServiceActivity implements CanvasWhite
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) { }
         });
+
+        try {
+            service.subscribe(this.livePadSession.getDrawingTopic());
+            service.subscribe(this.livePadSession.getHistoryReceivalTopic());
+            service.publish(livePadSession.getHistoryRequestTopic(), "");
+        } catch (MqttException | MqttClientNotConnectedException e) {
+            e.printStackTrace();
+        }
 
     }
 

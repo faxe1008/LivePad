@@ -24,7 +24,7 @@ public class CanvasWhiteboard extends View {
     private Paint drawPaint;
     private Path path = new Path();
     private CanvasWhiteBoardUpdateListener updateListener;
-    private Map<UUID, List<CanvasWhiteboardUpdate>> updates;
+    private Map<UUID, List<CanvasWhiteboardUpdate>> foreignUpdates;
     private UUID currentShapeID;
     private CanvasWhiteboardUpdate currentShapeStart;
 
@@ -33,7 +33,7 @@ public class CanvasWhiteboard extends View {
         setFocusable(true);
         setFocusableInTouchMode(true);
         setupPaint();
-        this.updates = new HashMap<>();
+        this.foreignUpdates = new HashMap<>();
     }
 
     public void setUpdateListener(CanvasWhiteBoardUpdateListener listener){
@@ -63,8 +63,8 @@ public class CanvasWhiteboard extends View {
     }
 
     private void applyForeignUpdates(Canvas canvas){
-        for (UUID shapeId : this.updates.keySet()){
-            drawSingleShape(canvas, this.updates.get(shapeId));
+        for (UUID shapeId : this.foreignUpdates.keySet()){
+            drawSingleShape(canvas, this.foreignUpdates.get(shapeId));
         }
     }
 
@@ -96,10 +96,10 @@ public class CanvasWhiteboard extends View {
 
     public void processUpdates(List<CanvasWhiteboardUpdate> updates){
         for(CanvasWhiteboardUpdate update: updates){
-            if(!this.updates.containsKey(update.getUuid())){
-                this.updates.put(update.getUuid(), new ArrayList<CanvasWhiteboardUpdate>());
+            if(!this.foreignUpdates.containsKey(update.getUuid())){
+                this.foreignUpdates.put(update.getUuid(), new ArrayList<CanvasWhiteboardUpdate>());
             }
-            this.updates.get(update.getUuid()).add(update);
+            this.foreignUpdates.get(update.getUuid()).add(update);
         }
         postInvalidate();
     }

@@ -12,6 +12,7 @@ import com.faxe.livepad.R;
 import com.faxe.livepad.model.LivePadSession;
 import com.faxe.livepad.model.User;
 import com.faxe.livepad.model.canvas.CanvasWhiteboardUpdate;
+import com.faxe.livepad.service.AESEncryptionService;
 import com.faxe.livepad.service.MqttClientNotConnectedException;
 import com.faxe.livepad.service.MqttConnectionManagerService;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -21,6 +22,7 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.internal.websocket.Base64;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -38,7 +40,6 @@ public class StartingActivity extends BasicServiceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_starting);
-
         this.txtJoinAs = findViewById(R.id.txtJoinAs);
         this.btnScan = findViewById(R.id.btnScan);
         this.btnScan.setOnClickListener(new View.OnClickListener() {
@@ -98,7 +99,6 @@ public class StartingActivity extends BasicServiceActivity {
 
                 final String[] livePadCode = result.getContents().split("\\|");
                 this.livePadSession = new LivePadSession(UUID.fromString(livePadCode[0]), livePadCode[1], new User(this.txtJoinAs.getText().toString()));
-
                 try {
                     this.mqttServiceConnection.getService().subscribe(this.livePadSession.getJoinAcceptedTopic());
                     this.mqttServiceConnection.getService().subscribe(this.livePadSession.getStartTopic());
